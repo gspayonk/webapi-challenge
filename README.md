@@ -26,13 +26,23 @@ Demonstrate your understanding of this Sprint's concepts by answering the follow
 
 - [ ] Mention two parts of Express that you learned about this week.
 
+            Routing and writing middleware?
+
 - [ ] Describe Middleware?
+
+            Software that acts as a bridge between an operating system or database and applications, especially on a network.
 
 - [ ] Describe a Resource?
 
+            A resource is an object with a type, associated data, relationships to other resources, and a set of methods that operate on it.
+
 - [ ] What can the API return to help clients know if a request was successful?
 
+            Data?
+
 - [ ] How can we partition our application into sub-applications?
+
+            By splitting the express application into sub-apps.
 
 ## Project Setup
 
