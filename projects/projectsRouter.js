@@ -1,129 +1,83 @@
-const projectDb = require('../data/helpers/projectModel');
 const router = require('express').Router();
+const projectsDb = require('../data/helpers/projectModel');
 
-
-router.post('/', validateProject, (req, res) => {
-    const {project} = req.body;
-
-    projectDb
-    .insert({project})
-    .then(project => res.status(200).json(project))
-
-});
-
-// router.post('/:id/projects', validateProjectId, validateAction, (req, res) => {
-
-//     const newAction = {
-//         text: req.body.text,
-//         text: req.body.text,
-//         project_id: req.project.id
-//         };
-
-//         actionsDb.insert(newAction).then(action => res.status(200).json(action));
-
-// });
+//get(): calling get returns an array of all the resources contained in the database. If you pass an id to this method it will return the resource with that id if one is found.
 
 router.get('/', (req, res) => {
-    projectDb
+  projectsDb
 
-    .get()
+  .get()
 
-    .then(projects => res.status(200).json(projects))
-
-    .catch(() => res.status(500).json({ errorMessage: 'An error has ocurred' }));
-
+  .then(projects => res.status(200).json(projects));
 });
 
-router.get('/:id', validateProjectId, (req, res) => {
-    const {id} = req.params.id;
+router.get('/:id', (req, res) => {
+  const {id} = req.params;
+  projectsDb
 
-    projectDb
+  .get(id)
 
-    .getById(id)
-
-    .then(project => res.status(200).json(project))
-
-    .catch(() => res.status(500).json({ error: 'An error has ocurred' }));
-
+  .then(project => res.status(200).json(project));
 });
 
-router.get('/:id/actions', validateProjectId, (req, res) => {
-    const {id} = req.params.id;
+router.put('/:id', (req, res) => {
+  const {id} = req.params;
+  const {name, description, completed} = req.body;
 
-    projectDb
+  projectsDb
 
-    .getProjectActions(id)
+    //update(): accepts two arguments, the first is the id of the resource to update, and the second is an object with the changes to apply. It returns the updated resource. If a resource with the provided id is not found, the method returns null
 
-    .then(actions => {
-        res.status(200).json(actions);
+    .update(id, { name, description, completed })
+
+    .then(project => {
+      if (!project) {
+        res.status(404).json({ err: 'Please enter valid id' });
+      }
+      res.status(200).json(project);
     })
 
-    .catch(() => res.status(500).json({ err: 'Server Error' }));
-
+    .catch(() => res.status(500).json({err: 'An error has ocurred'}));
 });
 
-router.delete('/:id', validateProjectId, (req, res) => {
-    const {id} = req.params.id;
+router.post('/', (req, res) => {
 
-    projectDb
+  const { name, description } = req.body;
+
+  const completed = req.body.completed || false;
+  const newProject = { name, description, completed };
+
+  if (!name || !description) {
+    res.status(400).json({ err: 'Please enter name and description' });
+  } else {
+
+    projectsDb
+
+      //insert(): calling insert passing it a resource object will add it to the database and return the newly created resource.
+
+      .insert(newProject)
+
+      .then(project => res.status(200).json(project))
+      .catch(() => {res.status(500).json({err: 'An error has ocurred'});});
+  }
+});
+
+
+router.delete('/:id', (req, res) => {
+  const {id} = req.params;
+  if (!id) {
+    res.status(404).json({ err: 'Please enter a valid id' });
+  }
+
+  projectsDb
+
+    //remove(): the remove method accepts an id as it's first parameter and, upon successfully deleting the resource from the database, returns the number of records deleted.
 
     .remove(id)
 
-    .then(project =>res.status(200).json({ response: `Deleted post id #${project}` }))
+    .then(project => res.status(200).json(project))
 
-    .catch(() => res.status(500).json({ error: 'Server Error' }));
-
+    .catch(() => {res.status(500).json({err: 'An error has ocurred'});});
 });
-
-router.put('/:id', validateProjectId, (req, res) => {
-    const {id} = req.params.id;
-    const {project} = req.body;
-
-    projectDb
-    .update(id, {project})
-    
-    .then(project => res.status(200).json(project)
-
-    .catch(err => res.status(500).json({err: err}))
-    );
-
-});
-
-//custom middleware
-function validateProjectId(req, res, next) {
-    const {id} = req.params;
-
-    projectDb
-
-    .getById(id)
-
-    .then(project => {
-        if (project) {req.project = project;
-            next();
-        } else {
-            res.status(400).json({ message: 'User Not Found' });
-        }
-    })
-
-    .catch(() => res.status(400).json({ message: 'Invalid Id' }));
-};
-
-function validateProject(req, res, next) {
-    if (!req.body) {
-            res.status(400).json({ message: 'project data not found' });
-        } else if (!req.body.name) {
-            res.status(400).json({ message: 'Need project name' });
-        }
-        next();
-};
-
-function validateAction(req, res, next) {
-    if (!req.body) {
-            res.status(400).json({ message: 'User data not found' });
-        } else if (!req.body.text) {
-            res.status(400).json({ message: 'Need Text' });
-        }
-        next();
-};
 
 module.exports = router;
